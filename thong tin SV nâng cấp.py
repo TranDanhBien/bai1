@@ -1,7 +1,6 @@
 import numpy as np
 import tkinter as tk
-from tkinter import messagebox, simpledialog
-
+from tkinter import messagebox, simpledialog, filedialog
 
 def load_data(file_path):
     """Load data from a CSV file into a numpy array."""
@@ -9,9 +8,8 @@ def load_data(file_path):
         data = np.genfromtxt(file_path, delimiter=',', dtype=str, encoding='utf-8', skip_header=1)
         return data
     except Exception as e:
-        print(f"Error loading data: {e}")
+        messagebox.showerror("Error", f"Error loading data: {e}")
         return np.array([])
-
 
 def search_student(data, student_id):
     """Search for a student's information by ID."""
@@ -24,7 +22,6 @@ def search_student(data, student_id):
     else:
         return "\n".join([", ".join(row) for row in student_data])
 
-
 def search_subject(data, subject_name):
     """Search for grades of a specific subject."""
     if data.size == 0:
@@ -35,7 +32,6 @@ def search_subject(data, subject_name):
         return f"Không tìm thấy điểm cho môn học {subject_name}."
     else:
         return "\n".join([f"ID: {row[0]}, Tên: {row[1]}, Điểm: {row[3]}" for row in subject_data])
-
 
 def calculate_average(data, student_id):
     """Calculate the average grade for a specific student using numpy."""
@@ -53,57 +49,43 @@ def calculate_average(data, student_id):
         except ValueError:
             return "Có lỗi khi chuyển đổi điểm sang số thực. Vui lòng kiểm tra dữ liệu."
 
-
 def search_action():
     choice = choice_var.get()
-    student_id = id_entry.get()
-    subject_name = subject_entry.get()
+    if choice == "student":
+        student_id = simpledialog.askstring("Input", "Nhập ID sinh viên:")
+        if student_id:
+            result = search_student(data, student_id)
+            messagebox.showinfo("Kết quả tìm kiếm", result)
+    elif choice == "subject":
+        subject_name = simpledialog.askstring("Input", "Nhập tên môn học:")
+        if subject_name:
+            result = search_subject(data, subject_name)
+            messagebox.showinfo("Kết quả tìm kiếm", result)
+    elif choice == "average":
+        student_id = simpledialog.askstring("Input", "Nhập ID sinh viên:")
+        if student_id:
+            result = calculate_average(data, student_id)
+            messagebox.showinfo("Kết quả tính toán", result)
 
-    if choice == '1':  # Tìm kiếm thông tin sinh viên
-        result = search_student(data, student_id)
-    elif choice == '2':  # Tìm kiếm điểm môn học
-        result = search_subject(data, subject_name)
-    elif choice == '3':  # Tính TBC điểm của sinh viên
-        result = calculate_average(data, student_id)
-    else:
-        result = "Lựa chọn không hợp lệ."
+def load_file():
+    file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
+    if file_path:
+        global data
+        data = load_data(file_path)
+        messagebox.showinfo("Thông báo", "Dữ liệu đã được tải thành công.")
 
-    messagebox.showinfo("Kết quả", result)
+# GUI setup
+root = tk.Tk()
+root.title("Student Information System")
 
+choice_var = tk.StringVar(value="student")
 
-def main():
-    global data
-    file_path = 'data.csv'  # Đặt đường dẫn đến file dữ liệu của bạn
-    data = load_data(file_path)
+tk.Label(root, text="Chọn hành động:").pack()
+tk.Radiobutton(root, text="Tìm kiếm sinh viên", variable=choice_var, value="student").pack()
+tk.Radiobutton(root, text="Tìm kiếm môn học", variable=choice_var, value="subject").pack()
+tk.Radiobutton(root, text="Tính điểm trung bình", variable=choice_var, value="average").pack()
 
-    # Tạo cửa sổ chính
-    root = tk.Tk()
-    root.title("Tìm kiếm thông tin sinh viên")
+tk.Button(root, text="Chọn tệp CSV", command=load_file).pack()
+tk.Button(root, text="Thực hiện", command=search_action).pack()
 
-    # Thêm các widget
-    tk.Label(root, text="Chọn hành động:").pack(pady=5)
-
-    global choice_var
-    choice_var = tk.StringVar(value='1')
-
-    tk.Radiobutton(root, text="Tìm kiếm thông tin sinh viên", variable=choice_var, value='1').pack(anchor='w')
-    tk.Radiobutton(root, text="Tìm kiếm điểm môn học", variable=choice_var, value='2').pack(anchor='w')
-    tk.Radiobutton(root, text="Tính TBC điểm của sinh viên", variable=choice_var, value='3').pack(anchor='w')
-
-    tk.Label(root, text="ID sinh viên:").pack(pady=5)
-    global id_entry
-    id_entry = tk.Entry(root)
-    id_entry.pack(pady=5)
-
-    tk.Label(root, text="Tên môn học (nếu có):").pack(pady=5)
-    global subject_entry
-    subject_entry = tk.Entry(root)
-    subject_entry.pack(pady=5)
-
-    tk.Button(root, text="Tìm kiếm", command=search_action).pack(pady=10)
-
-    root.mainloop()
-
-
-if __name__ == "__main__":
-    main()
+root.mainloop()
