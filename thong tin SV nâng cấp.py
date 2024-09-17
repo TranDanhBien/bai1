@@ -1,6 +1,7 @@
 import numpy as np
 import tkinter as tk
 from tkinter import messagebox, simpledialog, filedialog
+from tkinter import ttk
 
 def load_data(file_path):
     """Load data from a CSV file into a numpy array."""
@@ -10,6 +11,26 @@ def load_data(file_path):
     except Exception as e:
         messagebox.showerror("Error", f"Error loading data: {e}")
         return np.array([])
+
+def display_data(data):
+    """Display the CSV data in the Tkinter window."""
+    for widget in data_frame.winfo_children():
+        widget.destroy()
+
+    if data.size == 0:
+        messagebox.showinfo("Thông báo", "Dữ liệu không được tải.")
+        return
+
+    cols = ["ID", "Tên", "Môn học", "Điểm"]
+    tree = ttk.Treeview(data_frame, columns=cols, show='headings')
+    for col in cols:
+        tree.heading(col, text=col)
+        tree.column(col, width=100)
+
+    for row in data:
+        tree.insert("", "end", values=row)
+
+    tree.pack(expand=True, fill='both')
 
 def search_student(data, student_id):
     """Search for a student's information by ID."""
@@ -72,11 +93,13 @@ def load_file():
     if file_path:
         global data
         data = load_data(file_path)
+        display_data(data)
         messagebox.showinfo("Thông báo", "Dữ liệu đã được tải thành công.")
 
 # GUI setup
 root = tk.Tk()
 root.title("Student Information System")
+root.geometry("800x600")
 
 choice_var = tk.StringVar(value="student")
 
@@ -87,5 +110,8 @@ tk.Radiobutton(root, text="Tính điểm trung bình", variable=choice_var, valu
 
 tk.Button(root, text="Chọn tệp CSV", command=load_file).pack()
 tk.Button(root, text="Thực hiện", command=search_action).pack()
+
+data_frame = tk.Frame(root)
+data_frame.pack(expand=True, fill='both')
 
 root.mainloop()
